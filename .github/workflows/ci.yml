@@ -26,21 +26,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      - name: Show context
-        run: |
-          node --version
-          npm --version
-          pwd
-          ls -la
-          ls -la web
-
       - name: Install dependencies
         working-directory: web
-        run: |
-          set -x
-          npm config get registry
-          ls -la package.json package-lock.json
-          npm ci --no-audit --no-fund --foreground-scripts 2>&1 || (echo "--- npm ci failed, falling back to install for diagnosis ---" && npm install --no-audit --no-fund 2>&1 | tail -50 && exit 1)
+        run: npm ci --no-audit --no-fund
 
       - name: Lint
         working-directory: web
