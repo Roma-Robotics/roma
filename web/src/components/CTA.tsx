@@ -61,10 +61,10 @@ export function CTA() {
               </ul>
 
               <a
-                href="mailto:hello@roma.build?subject=Working%20with%20Roma"
+                href="mailto:hello@buildroma.ai?subject=Working%20with%20Roma"
                 className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 font-mono text-[12px] uppercase tracking-[0.18em] text-bone transition-transform hover:-translate-y-0.5"
               >
-                hello@roma.build
+                hello@buildroma.ai
                 <ArrowUpRight size={14} />
               </a>
             </div>

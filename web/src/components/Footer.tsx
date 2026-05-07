@@ -27,13 +27,13 @@ export function Footer() {
           items={[
             { label: "Open roles", href: "#contact" },
             { label: "Partners", href: "#contact" },
-            { label: "Press", href: "mailto:press@roma.build" },
+            { label: "Press", href: "mailto:press@buildroma.ai" },
           ]}
         />
         <FooterCol
           title="Contact"
           items={[
-            { label: "hello@roma.build", href: "mailto:hello@roma.build" },
+            { label: "hello@buildroma.ai", href: "mailto:hello@buildroma.ai" },
             { label: "New York · London · Hong Kong", href: "#" },
           ]}
         />
