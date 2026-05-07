@@ -36,7 +36,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: web
-        run: npm ci --no-audit --no-fund
+        run: |
+          set -x
+          npm config get registry
+          ls -la package.json package-lock.json
+          npm ci --no-audit --no-fund --foreground-scripts 2>&1 || (echo "--- npm ci failed, falling back to install for diagnosis ---" && npm install --no-audit --no-fund 2>&1 | tail -50 && exit 1)
 
       - name: Lint
         working-directory: web
