@@ -1,3 +1,12 @@
+/*
+ * The simulator deliberately uses two patterns that r3f relies on but that
+ * react-hooks v7's strict rules flag:
+ *  - mutating the Three.js camera returned by useThree() (react-hooks/immutability)
+ *  - reading stateRef.current inside <Canvas>'s frame loop (react-hooks/refs)
+ * Both are intentional and standard for @react-three/fiber. Cloning state on
+ * every frame to satisfy the linter would tank performance for no benefit.
+ */
+/* eslint-disable react-hooks/refs, react-hooks/immutability */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Grid } from "@react-three/drei";
