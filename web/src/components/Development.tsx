@@ -29,7 +29,7 @@ export function Development() {
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
-            <SectionLabel num="05" text="Development" />
+            <SectionLabel num="08" text="Development" />
             <h3 className="display mt-6 text-5xl text-ink md:text-7xl">
               From bidder
               <br />
@@ -81,12 +81,12 @@ function Card({
       }}
       className="group flex flex-col gap-5 bg-bone-2 p-8 transition-colors duration-300 hover:bg-bone md:p-10"
     >
-      <div className="flex size-12 items-center justify-center rounded-xl border border-ink/15 bg-ink/[0.04] text-ink/80 transition-colors group-hover:border-rust/60 group-hover:text-rust">
+      <div className="flex size-12 items-center justify-center rounded-xl border border-ink/15 bg-ink/[0.04] text-ink/80 transition-colors group-hover:border-silver/60 group-hover:text-silver">
         <Icon size={20} strokeWidth={1.6} />
       </div>
       <h4 className="display text-3xl text-ink md:text-4xl">{title}</h4>
       <p className="text-[15px] leading-relaxed text-ink/70">{body}</p>
-      <div className="mt-2 h-px w-full origin-left scale-x-0 bg-rust transition-transform duration-500 group-hover:scale-x-100" />
+      <div className="mt-2 h-px w-full origin-left scale-x-0 bg-silver transition-transform duration-500 group-hover:scale-x-100" />
     </motion.div>
   );
 }

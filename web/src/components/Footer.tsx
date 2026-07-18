@@ -5,7 +5,7 @@ export function Footer() {
         <div className="col-span-2 md:col-span-5">
           <div className="display text-6xl text-bone md:text-8xl">Roma</div>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-bone/55">
-            An autonomous real-world development company. AI, robots,
+            An autonomous building company. AI, robots,
             construction, and development as one — one system that gets
             smarter with every building.
           </p>
@@ -34,7 +34,7 @@ export function Footer() {
           title="Contact"
           items={[
             { label: "hello@buildroma.ai", href: "mailto:hello@buildroma.ai" },
-            { label: "New York · London · Hong Kong", href: "#" },
+            { label: "NY · LDN · HK", href: "#" },
           ]}
         />
       </div>
@@ -65,7 +65,7 @@ function FooterCol({
           <li key={it.label}>
             <a
               href={it.href}
-              className="text-sm text-bone/85 transition-colors hover:text-rust"
+              className="text-sm text-bone/85 transition-colors hover:text-silver"
             >
               {it.label}
             </a>

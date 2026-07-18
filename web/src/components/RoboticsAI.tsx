@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bot, Brain, Eye, Cpu } from "lucide-react";
+import { Bot, Brain, Eye, Cpu, Radio, Rocket } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const pillars: { icon: LucideIcon; title: string; body: string }[] = [
@@ -10,8 +10,8 @@ const pillars: { icon: LucideIcon; title: string; body: string }[] = [
   },
   {
     icon: Eye,
-    title: "Live site perception",
-    body: "A 3D, always-on understanding of the jobsite, fused from cameras, lidar, and our own machines.",
+    title: "Vigil",
+    body: "Our live site perception software, fused from cameras, lidar, and our own machines. Vigil continuously updates Verissimus, the ground-truth digital twin of the jobsite.",
   },
   {
     icon: Brain,
@@ -22,6 +22,16 @@ const pillars: { icon: LucideIcon; title: string; body: string }[] = [
     icon: Cpu,
     title: "Closed learning loop",
     body: "Every weld, pour, and panel becomes training data for the next building. The system gets sharper with every project.",
+  },
+  {
+    icon: Rocket,
+    title: "Deploy",
+    body: "New machines and new behaviors ship straight from the lab to live jobsites — provisioned, calibrated, and on task through Aurelius from the first hour.",
+  },
+  {
+    icon: Radio,
+    title: "Manage",
+    body: "Aurelius runs the fleet in production — monitoring health, reassigning work, and pushing updates over the air. Every deployment feeds back into the OS.",
   },
 ];
 
@@ -34,7 +44,7 @@ export function RoboticsAI() {
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
-            <SectionLabel num="03" text="Robotics & AI" />
+            <SectionLabel num="06" text="Robotics & AI" />
             <h3 className="display mt-6 text-5xl text-ink md:text-7xl">
               The intelligence
               <br />
@@ -86,7 +96,7 @@ function Pillar({
       }}
       className="group flex gap-6 bg-bone p-8 transition-colors duration-300 hover:bg-bone-2 md:p-10"
     >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-ink/15 bg-ink/[0.04] text-ink/80 transition-colors group-hover:border-rust/60 group-hover:text-rust">
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-ink/15 bg-ink/[0.04] text-ink/80 transition-colors group-hover:border-silver/60 group-hover:text-silver">
         <Icon size={20} strokeWidth={1.6} />
       </div>
       <div>

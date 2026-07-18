@@ -17,9 +17,9 @@ export function Mission() {
         >
           <SectionLabel num="01" text="Mission" />
           <h3 className="display mt-6 text-5xl text-ink md:text-6xl">
-            To build <em className="italic">tomorrow&apos;s</em> world,
+            To build <em className="italic">tomorrow&apos;s</em> universe,
             <br />
-            for the next millennium,
+            from earth to the universe,
             <br />
             for <em className="italic">everyone</em>
           </h3>
@@ -33,7 +33,7 @@ export function Mission() {
           className="md:col-span-7 md:col-start-6"
         >
           <p className="display text-3xl leading-[1.15] text-ink md:text-4xl">
-            Construction is the largest sector on Earth and the least automated.
+            Infrastructure is the largest sector on Earth and the least automated.
             For seventy years it has gotten <span className="italic">slower</span>,{" "}
             <span className="italic">more expensive</span>, and{" "}
             <span className="italic">less productive</span>.

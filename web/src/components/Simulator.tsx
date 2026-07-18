@@ -9,7 +9,7 @@
 /* eslint-disable react-hooks/refs, react-hooks/immutability */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Grid } from "@react-three/drei";
+import { Grid, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 /* -----------------------------------------------------------------------
@@ -297,7 +297,7 @@ const COLORS = {
   ground: "#e9e3d5",
   gridLine: "#0a0a0a",
   zoneEmpty: "#d8d2c2",
-  zonePouring: "#bfbcae",
+  zonePouring: "#b4b1a2",
   zoneCured: "#a3a195",
   panelStaged: "#1a1a1a",
   panelLifting: "#2a2a2c",
@@ -305,6 +305,11 @@ const COLORS = {
   robotBody: "#0a0a0a",
   robotAccent: "#4a6b57",
   staging: "#0a0a0a",
+  rebar: "#6f6a5c",
+  formwork: "#b8b09b",
+  ghost: "#0a0a0a",
+  path: "#4a6b57",
+  crane: "#141414",
 };
 
 function ZoneMesh({ zone }: { zone: Zone }) {
@@ -318,11 +323,74 @@ function ZoneMesh({ zone }: { zone: Zone }) {
             .getStyle()
         : COLORS.zoneCured;
 
+  // Rebar mesh grid (visible until concrete covers it)
+  const rebarPoints = useMemo(() => {
+    const pts: number[] = [];
+    const y = 0.1;
+    const hw = zone.w / 2 - 0.3;
+    const hd = zone.d / 2 - 0.3;
+    for (let x = -hw; x <= hw + 0.001; x += 1.2) {
+      pts.push(x, y, -hd, x, y, hd);
+    }
+    for (let z = -hd; z <= hd + 0.001; z += 1.2) {
+      pts.push(-hw, y, z, hw, y, z);
+    }
+    return new Float32Array(pts);
+  }, [zone.w, zone.d]);
+
+  const rebarOpacity =
+    zone.state === "empty"
+      ? 0.5
+      : zone.state === "pouring"
+        ? 0.5 * (1 - zone.progress)
+        : 0;
+
   return (
-    <mesh position={[zone.x, 0.04, zone.z]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[zone.w, zone.d]} />
-      <meshStandardMaterial color={color} roughness={1} />
-    </mesh>
+    <group position={[zone.x, 0, zone.z]}>
+      {/* Slab — wet sheen while pouring, matte once cured */}
+      <mesh position={[0, 0.06, 0]} receiveShadow>
+        <boxGeometry args={[zone.w, 0.12, zone.d]} />
+        <meshStandardMaterial
+          color={color}
+          roughness={zone.state === "pouring" ? 0.35 : 1}
+        />
+      </mesh>
+
+      {/* Rebar */}
+      {rebarOpacity > 0.01 && (
+        <lineSegments>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[rebarPoints, 3]} />
+          </bufferGeometry>
+          <lineBasicMaterial
+            color={COLORS.rebar}
+            transparent
+            opacity={rebarOpacity}
+          />
+        </lineSegments>
+      )}
+
+      {/* Formwork edges — stripped after cure */}
+      {zone.state !== "cured" && (
+        <group>
+          {[
+            [0, -zone.d / 2, zone.w + 0.16, 0.14] as const,
+            [0, zone.d / 2, zone.w + 0.16, 0.14] as const,
+          ].map(([x, z, len], i) => (
+            <mesh key={`h${i}`} position={[x, 0.12, z]} castShadow>
+              <boxGeometry args={[len, 0.24, 0.14]} />
+              <meshStandardMaterial color={COLORS.formwork} roughness={0.85} />
+            </mesh>
+          ))}
+          {[-zone.w / 2, zone.w / 2].map((x, i) => (
+            <mesh key={`v${i}`} position={[x, 0.12, 0]} castShadow>
+              <boxGeometry args={[0.14, 0.24, zone.d + 0.16]} />
+              <meshStandardMaterial color={COLORS.formwork} roughness={0.85} />
+            </mesh>
+          ))}
+        </group>
+      )}
+    </group>
   );
 }
 
@@ -331,10 +399,16 @@ function PanelMesh({ panel }: { panel: Panel }) {
   const angle = panel.state === "set" ? 0 : (1 - panel.progress) * (Math.PI / 2);
   const liftHeight = panel.progress * 3;
 
+  // As-planned ghost outline for the digital twin — where this panel will end up
+  const ghostGeom = useMemo(
+    () => new THREE.EdgesGeometry(new THREE.BoxGeometry(panel.w, 6, 0.3)),
+    [panel.w],
+  );
+
   return (
     <group position={[panel.x, 0, panel.z]} rotation={[0, panel.rotY, 0]}>
       <group position={[0, 3 + liftHeight - 3, 0]} rotation={[angle, 0, 0]}>
-        <mesh position={[0, 3, 0]}>
+        <mesh position={[0, 3, 0]} castShadow>
           <boxGeometry args={[panel.w, 6, 0.3]} />
           <meshStandardMaterial
             color={
@@ -348,6 +422,84 @@ function PanelMesh({ panel }: { panel: Panel }) {
           />
         </mesh>
       </group>
+
+      {panel.state !== "set" && (
+        <lineSegments position={[0, 3, 0]} geometry={ghostGeom}>
+          <lineBasicMaterial color={COLORS.ghost} transparent opacity={0.14} />
+        </lineSegments>
+      )}
+    </group>
+  );
+}
+
+function Rotor({ position }: { position: [number, number, number] }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame((_, dt) => {
+    if (ref.current) ref.current.rotation.y += dt * 40;
+  });
+  return (
+    <mesh ref={ref} position={position}>
+      <boxGeometry args={[0.5, 0.02, 0.06]} />
+      <meshStandardMaterial
+        color={COLORS.robotBody}
+        transparent
+        opacity={0.55}
+      />
+    </mesh>
+  );
+}
+
+function RobotLabel({ text }: { text: string }) {
+  return (
+    <Html center zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
+      <div
+        style={{
+          fontFamily: "JetBrains Mono, monospace",
+          fontSize: "8.5px",
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          color: "rgba(10,10,10,0.72)",
+          background: "rgba(243,239,230,0.82)",
+          border: "1px solid rgba(10,10,10,0.14)",
+          borderRadius: "999px",
+          padding: "1.5px 7px",
+          backdropFilter: "blur(2px)",
+        }}
+      >
+        {text}
+      </div>
+    </Html>
+  );
+}
+
+function RobotPath({ robot }: { robot: Robot }) {
+  const dx = robot.targetX - robot.x;
+  const dz = robot.targetZ - robot.z;
+  if (Math.hypot(dx, dz) < 0.6) return null;
+
+  const y = 0.14;
+  const points = new Float32Array([
+    robot.x, y, robot.z,
+    robot.targetX, y, robot.targetZ,
+  ]);
+
+  return (
+    <group>
+      <line>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[points, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial color={COLORS.path} transparent opacity={0.45} />
+      </line>
+      {/* target marker */}
+      <mesh
+        position={[robot.targetX, 0.08, robot.targetZ]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <ringGeometry args={[0.35, 0.5, 24]} />
+        <meshBasicMaterial color={COLORS.path} transparent opacity={0.5} />
+      </mesh>
     </group>
   );
 }
@@ -360,25 +512,120 @@ function RobotMesh({ robot }: { robot: Robot }) {
   const dotPulse = (Math.sin(robot.pulse * 4) + 1) / 2;
   const dotScale = 0.5 + dotPulse * 0.5;
 
-  // Different body shape per kind
-  const bodyW = robot.kind === "haul" ? 1.6 : robot.kind === "pour" ? 1.2 : 0.9;
-  const bodyD = robot.kind === "haul" ? 2.4 : robot.kind === "pour" ? 1.8 : 1.4;
-  const bodyH = robot.kind === "survey" ? 0.5 : 0.7;
+  if (robot.kind === "survey") {
+    // Aerial survey drone — flies the perimeter feeding the twin
+    const alt = 5 + Math.sin(robot.pulse * 1.6) * 0.25;
+    return (
+      <group position={[robot.x, 0, robot.z]}>
+        <group position={[0, alt, 0]} rotation={[0, yaw, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.5, 0.16, 0.5]} />
+            <meshStandardMaterial color={COLORS.robotBody} roughness={0.5} />
+          </mesh>
+          {/* arms */}
+          <mesh rotation={[0, Math.PI / 4, 0]}>
+            <boxGeometry args={[1.5, 0.05, 0.08]} />
+            <meshStandardMaterial color={COLORS.robotBody} roughness={0.5} />
+          </mesh>
+          <mesh rotation={[0, -Math.PI / 4, 0]}>
+            <boxGeometry args={[1.5, 0.05, 0.08]} />
+            <meshStandardMaterial color={COLORS.robotBody} roughness={0.5} />
+          </mesh>
+          {([[0.53, 0.53], [0.53, -0.53], [-0.53, 0.53], [-0.53, -0.53]] as const).map(
+            ([rx, rz], i) => (
+              <Rotor key={i} position={[rx, 0.08, rz]} />
+            ),
+          )}
+          {/* sensor gimbal */}
+          <mesh position={[0, -0.16, 0]}>
+            <sphereGeometry args={[0.11, 12, 12]} />
+            <meshBasicMaterial color={COLORS.robotAccent} />
+          </mesh>
+          <group position={[0, 0.5, 0]}>
+            <RobotLabel text={`${robot.id} · scan`} />
+          </group>
+        </group>
+        {/* scan cone to the ground */}
+        <mesh position={[0, alt / 2 - 0.1, 0]}>
+          <coneGeometry args={[1.7, alt - 0.2, 24, 1, true]} />
+          <meshBasicMaterial
+            color={COLORS.robotAccent}
+            transparent
+            opacity={0.05}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      </group>
+    );
+  }
+
+  const isHaul = robot.kind === "haul";
 
   return (
     <group position={[robot.x, 0, robot.z]} rotation={[0, yaw, 0]}>
-      <mesh position={[0, bodyH / 2 + 0.05, 0]}>
-        <boxGeometry args={[bodyW, bodyH, bodyD]} />
-        <meshStandardMaterial color={COLORS.robotBody} roughness={0.6} />
+      {/* tracks / wheels */}
+      {([[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]] as const).map(
+        ([wx, wz], i) => (
+          <mesh key={i} position={[wx, 0.26, wz]} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.26, 0.26, 0.18, 16]} />
+            <meshStandardMaterial color="#1c1c1c" roughness={0.9} />
+          </mesh>
+        ),
+      )}
+
+      {/* chassis */}
+      <mesh position={[0, 0.62, 0]} castShadow>
+        <boxGeometry args={isHaul ? [1.5, 0.36, 2.6] : [1.25, 0.42, 2.0]} />
+        <meshStandardMaterial color={COLORS.robotBody} roughness={0.55} />
       </mesh>
-      {/* accent dot on top */}
+
+      {isHaul ? (
+        <>
+          {/* cab + panel load */}
+          <mesh position={[0, 1.0, 1.05]} castShadow>
+            <boxGeometry args={[1.3, 0.5, 0.55]} />
+            <meshStandardMaterial color="#242424" roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 1.06, -0.35]} castShadow>
+            <boxGeometry args={[1.15, 0.55, 1.7]} />
+            <meshStandardMaterial color={COLORS.panelStaged} roughness={0.85} />
+          </mesh>
+        </>
+      ) : (
+        <>
+          {/* pour boom + hopper */}
+          <mesh position={[0, 1.0, 0.55]} castShadow>
+            <cylinderGeometry args={[0.34, 0.42, 0.55, 14]} />
+            <meshStandardMaterial color="#242424" roughness={0.6} />
+          </mesh>
+          <group position={[0, 0.95, -0.15]} rotation={[-0.55, 0, 0]}>
+            <mesh position={[0, 0, -0.95]} castShadow>
+              <boxGeometry args={[0.16, 0.16, 1.9]} />
+              <meshStandardMaterial color="#242424" roughness={0.6} />
+            </mesh>
+            <mesh position={[0, -0.12, -1.9]}>
+              <cylinderGeometry args={[0.06, 0.09, 0.4, 10]} />
+              <meshStandardMaterial color="#242424" roughness={0.6} />
+            </mesh>
+          </group>
+        </>
+      )}
+
+      {/* status beacon */}
       <mesh
-        position={[0, bodyH + 0.15, 0]}
+        position={[0, isHaul ? 1.45 : 1.5, 0.9]}
         scale={[dotScale, dotScale, dotScale]}
       >
-        <sphereGeometry args={[0.18, 16, 16]} />
+        <sphereGeometry args={[0.12, 16, 16]} />
         <meshBasicMaterial color={COLORS.robotAccent} />
       </mesh>
+
+      <group position={[0, 2.1, 0]}>
+        <RobotLabel
+          text={`${robot.id} · ${robot.task ? "on task" : "idle"}`}
+        />
+      </group>
     </group>
   );
 }
@@ -424,6 +671,93 @@ function SiteFootprint() {
   );
 }
 
+function TowerCrane() {
+  const jibRef = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    if (jibRef.current) {
+      jibRef.current.rotation.y =
+        0.6 + Math.sin(clock.elapsedTime * 0.07) * 0.9;
+    }
+  });
+
+  return (
+    <group position={[SITE_W / 2 + 9, 0, -SITE_D / 2 - 5]}>
+      {/* base + mast */}
+      <mesh position={[0, 0.5, 0]} castShadow>
+        <boxGeometry args={[2.4, 1, 2.4]} />
+        <meshStandardMaterial color={COLORS.crane} roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 8.5, 0]} castShadow>
+        <boxGeometry args={[0.7, 16, 0.7]} />
+        <meshStandardMaterial color={COLORS.crane} roughness={0.7} />
+      </mesh>
+
+      {/* slewing jib */}
+      <group ref={jibRef} position={[0, 16.6, 0]}>
+        <mesh position={[0, 0, -7.5]} castShadow>
+          <boxGeometry args={[0.4, 0.45, 15]} />
+          <meshStandardMaterial color={COLORS.crane} roughness={0.7} />
+        </mesh>
+        <mesh position={[0, 0, 2.6]} castShadow>
+          <boxGeometry args={[0.4, 0.45, 5]} />
+          <meshStandardMaterial color={COLORS.crane} roughness={0.7} />
+        </mesh>
+        {/* counterweight */}
+        <mesh position={[0, -0.55, 4.6]} castShadow>
+          <boxGeometry args={[1.1, 0.9, 1.4]} />
+          <meshStandardMaterial color={COLORS.crane} roughness={0.7} />
+        </mesh>
+        {/* hoist cable + hook */}
+        <mesh position={[0, -2.6, -12]}>
+          <cylinderGeometry args={[0.025, 0.025, 5.2, 6]} />
+          <meshStandardMaterial color={COLORS.crane} roughness={0.7} />
+        </mesh>
+        <mesh position={[0, -5.4, -12]}>
+          <boxGeometry args={[0.3, 0.4, 0.3]} />
+          <meshBasicMaterial color={COLORS.robotAccent} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+// Expanding lidar-sweep rings — the visual heartbeat of the twin sync
+function ScanPulse() {
+  const rings = useRef<(THREE.Mesh | null)[]>([]);
+
+  useFrame(({ clock }) => {
+    rings.current.forEach((ring, i) => {
+      if (!ring) return;
+      const p = (clock.elapsedTime * 0.18 + i / 3) % 1;
+      const s = 2 + p * 52;
+      ring.scale.set(s, s, 1);
+      (ring.material as THREE.MeshBasicMaterial).opacity = (1 - p) * 0.16;
+    });
+  });
+
+  return (
+    <group position={[0, 0.05, 0]}>
+      {[0, 1, 2].map((i) => (
+        <mesh
+          key={i}
+          ref={(el) => {
+            rings.current[i] = el;
+          }}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <ringGeometry args={[0.97, 1, 64]} />
+          <meshBasicMaterial
+            color={COLORS.gridLine}
+            transparent
+            opacity={0}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 // Aim the (orthographic) default camera at the jobsite, and reframe on resize
 // so the whole site is always in view regardless of canvas size.
 function CameraRig() {
@@ -447,6 +781,14 @@ function CameraRig() {
     camera.far = 500;
     camera.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
+
+  // Slow orbital drift so the twin feels alive
+  useFrame(({ clock }) => {
+    const a = Math.PI / 4 + Math.sin(clock.elapsedTime * 0.045) * 0.055;
+    const r = Math.hypot(55, 55);
+    camera.position.set(Math.cos(a) * r, 60, Math.sin(a) * r);
+    camera.lookAt(0, 0, 0);
+  });
 
   return null;
 }
@@ -475,9 +817,22 @@ function Scene({
 
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[20, 30, 10]} intensity={0.8} />
-      <directionalLight position={[-20, 20, -10]} intensity={0.25} />
+      <ambientLight intensity={0.55} />
+      <directionalLight
+        position={[28, 42, 16]}
+        intensity={1.1}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-75}
+        shadow-camera-right={75}
+        shadow-camera-top={75}
+        shadow-camera-bottom={-75}
+        shadow-camera-near={1}
+        shadow-camera-far={140}
+        shadow-bias={-0.0004}
+      />
+      <directionalLight position={[-20, 20, -10]} intensity={0.2} />
 
       {/* Ground */}
       <mesh
@@ -506,6 +861,8 @@ function Scene({
 
       <SiteFootprint />
       <StagingArea />
+      <TowerCrane />
+      <ScanPulse />
 
       {s.zones.map((z) => (
         <ZoneMesh key={z.id} zone={z} />
@@ -515,6 +872,9 @@ function Scene({
       ))}
       {s.robots.map((r) => (
         <RobotMesh key={r.id} robot={r} />
+      ))}
+      {s.robots.map((r) => (
+        <RobotPath key={`path-${r.id}`} robot={r} />
       ))}
     </>
   );
@@ -575,11 +935,12 @@ export function Simulator() {
           </div>
           <div className="md:col-span-4">
             <p className="text-[15px] leading-relaxed text-ink/70">
-              A scripted preview of a Roma fleet on a tilt-up warehouse shell.
-              Slabs pour, panels lift, robots dispatch from staging — driven
-              by the same task-graph + dispatcher model that powers the real
-              jobsite. Replace the in-browser engine with a live WebSocket
-              and the same scene renders production data.
+              A living digital twin of a Roma jobsite — a tilt-up warehouse
+              shell rendered from the same Vigil → Verissimus pipeline that
+              runs production sites. Rebar, formwork, pours, panel lifts,
+              planned paths, and the fleet itself, all in sync. Swap the
+              in-browser engine for a live feed and this scene renders the
+              real site.
             </p>
           </div>
         </div>
@@ -589,6 +950,7 @@ export function Simulator() {
             <Canvas
               dpr={[1, 2]}
               orthographic
+              shadows
               camera={{
                 position: [55, 60, 55],
                 zoom: 11,
@@ -606,7 +968,7 @@ export function Simulator() {
           {/* Top-left: live tag */}
           <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-ink/15 bg-bone/85 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-ink/70 backdrop-blur">
             <span className="size-1.5 animate-pulse rounded-full bg-rust" />
-            live · sim
+            digital twin · live
           </div>
 
           {/* Top-right: clock */}
@@ -615,10 +977,14 @@ export function Simulator() {
           </div>
 
           {/* Bottom-left: KPIs */}
-          <div className="pointer-events-none absolute bottom-4 left-4 grid grid-cols-3 gap-3 rounded-xl border border-ink/15 bg-bone/85 p-3 backdrop-blur">
+          <div className="pointer-events-none absolute bottom-4 left-4 grid grid-cols-4 gap-3 rounded-xl border border-ink/15 bg-bone/85 p-3 backdrop-blur">
             <Kpi label="Slabs" value={`${cured}/${totalZones}`} />
             <Kpi label="Pouring" value={`${pouring}`} />
             <Kpi label="Panels" value={`${panelsSet}/${totalPanels}`} />
+            <Kpi
+              label="Twin sync"
+              value={`${(99.5 + Math.sin(snapshot.t * 0.6) * 0.4).toFixed(1)}%`}
+            />
           </div>
 
           {/* Bottom-right: fleet + recent events */}

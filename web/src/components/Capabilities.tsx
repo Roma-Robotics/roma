@@ -4,8 +4,8 @@ import {
   Brain,
   Eye,
   HardHat,
-  Boxes,
   Wrench,
+  Layers,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -23,9 +23,9 @@ const items: {
   },
   {
     icon: Eye,
-    title: "Site Perception",
-    body: "A live 3D model of the jobsite from cameras, lidar, and our own machines. The plan, the as-built, and the next instruction are always one query apart.",
-    tag: "atlas",
+    title: "Vigil",
+    body: "Vigil watches the jobsite through cameras, lidar, and our own machines. It feeds Verissimus — “the truest one” — our ground-truth layer and living digital twin of every project.",
+    tag: "perception",
   },
   {
     icon: Brain,
@@ -34,10 +34,10 @@ const items: {
     tag: "core",
   },
   {
-    icon: Boxes,
-    title: "Off-site Fabrication",
-    body: "Roma factories produce panels, modules, and MEP assemblies tuned to the design and to the robots that install them. Components arrive numbered and sequenced.",
-    tag: "forge",
+    icon: Layers,
+    title: "Aurelius OS",
+    body: "The operating system that orchestrates the fleet. Aurelius assigns every task, sequences every machine, and keeps robots and crews moving as one — in real time, across the whole site.",
+    tag: "orchestrate",
   },
   {
     icon: HardHat,
@@ -62,7 +62,7 @@ export function Capabilities() {
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
-            <SectionLabel num="02" text="Capabilities" />
+            <SectionLabel num="04" text="Capabilities" />
             <h3 className="display mt-6 text-5xl md:text-7xl">
               AI.
               <br />
@@ -120,7 +120,7 @@ function Capability({
       className="group relative flex flex-col gap-5 bg-ink p-8 transition-colors duration-300 hover:bg-ink-2 md:p-10"
     >
       <div className="flex items-center justify-between">
-        <div className="flex size-12 items-center justify-center rounded-xl border border-bone/15 bg-bone/[0.04] text-bone/80 transition-colors group-hover:border-rust/60 group-hover:text-rust">
+        <div className="flex size-12 items-center justify-center rounded-xl border border-bone/15 bg-bone/[0.04] text-bone/80 transition-colors group-hover:border-silver/60 group-hover:text-silver">
           <Icon size={20} strokeWidth={1.6} />
         </div>
         <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-bone/40">
@@ -129,7 +129,7 @@ function Capability({
       </div>
       <h4 className="display text-3xl text-bone">{title}</h4>
       <p className="text-[15px] leading-relaxed text-bone/65">{body}</p>
-      <div className="mt-2 h-px w-full origin-left scale-x-0 bg-rust transition-transform duration-500 group-hover:scale-x-100" />
+      <div className="mt-2 h-px w-full origin-left scale-x-0 bg-silver transition-transform duration-500 group-hover:scale-x-100" />
     </motion.div>
   );
 }

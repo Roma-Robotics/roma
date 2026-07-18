@@ -27,10 +27,10 @@ export function Construction() {
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
-            <SectionLabel num="04" text="Construction" />
+            <SectionLabel num="07" text="Construction" />
             <h3 className="display mt-6 text-5xl md:text-7xl">
-              <span className="block">We don&apos;t deliver</span>
-              <em className="block italic text-bone/85">technology.</em>
+              <span className="block">We don&apos;t just</span>
+              <em className="block italic text-bone/85">deliver robots.</em>
               <span className="block">We deliver</span>
               <em className="block italic text-bone/85">projects.</em>
             </h3>
@@ -86,7 +86,7 @@ function Step({
       </div>
       <h4 className="display text-3xl text-bone md:text-4xl">{title}</h4>
       <p className="text-[15px] leading-relaxed text-bone/65">{body}</p>
-      <div className="mt-2 h-px w-full origin-left scale-x-0 bg-rust transition-transform duration-500 group-hover:scale-x-100" />
+      <div className="mt-2 h-px w-full origin-left scale-x-0 bg-silver transition-transform duration-500 group-hover:scale-x-100" />
     </motion.li>
   );
 }

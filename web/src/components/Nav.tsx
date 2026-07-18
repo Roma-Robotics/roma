@@ -32,7 +32,7 @@ export function Nav() {
     >
       <nav className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-5 md:px-10">
         <a href="#top" className="flex items-center gap-3">
-          <Logo />
+          <Logo scrolled={scrolled} />
         </a>
 
         <ul className="hidden items-center gap-8 md:flex">
@@ -40,7 +40,11 @@ export function Nav() {
             <li key={l.href}>
               <a
                 href={l.href}
-                className="font-mono text-[12px] uppercase tracking-[0.16em] text-ink/70 transition-colors hover:text-ink"
+                className={`font-mono text-[12px] uppercase tracking-[0.16em] transition-colors ${
+                  scrolled
+                    ? "text-ink/70 hover:text-ink"
+                    : "text-bone/70 hover:text-bone"
+                }`}
               >
                 {l.label}
               </a>
@@ -50,7 +54,11 @@ export function Nav() {
 
         <a
           href="#contact"
-          className="group relative inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-bone transition-transform hover:-translate-y-0.5"
+          className={`group relative inline-flex items-center gap-3 border px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors hover:border-silver hover:text-silver ${
+            scrolled
+              ? "border-ink/40 text-ink"
+              : "border-bone/40 text-bone"
+          }`}
         >
           <span className="size-1.5 rounded-full bg-rust" />
           Build with us
@@ -60,8 +68,14 @@ export function Nav() {
   );
 }
 
-function Logo() {
+function Logo({ scrolled }: { scrolled: boolean }) {
   return (
-    <span className="display text-2xl tracking-tight text-ink">Roma</span>
+    <span
+      className={`display text-2xl tracking-tight transition-colors ${
+        scrolled ? "text-ink" : "text-bone"
+      }`}
+    >
+      Roma
+    </span>
   );
 }

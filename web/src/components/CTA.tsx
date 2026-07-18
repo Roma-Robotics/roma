@@ -54,7 +54,7 @@ export function CTA() {
                     </div>
                     <ArrowUpRight
                       size={18}
-                      className="text-ink/40 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-rust"
+                      className="text-ink/40 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-silver"
                     />
                   </li>
                 ))}
@@ -62,7 +62,7 @@ export function CTA() {
 
               <a
                 href="mailto:hello@buildroma.ai?subject=Working%20with%20Roma"
-                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 font-mono text-[12px] uppercase tracking-[0.18em] text-bone transition-transform hover:-translate-y-0.5"
+                className="group mt-8 inline-flex w-full items-center justify-center gap-3 border border-ink/40 px-6 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:border-silver hover:text-silver"
               >
                 hello@buildroma.ai
                 <ArrowUpRight size={14} />
