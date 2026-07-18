@@ -50,7 +50,7 @@ const stages: {
 
 export function SystemFlow() {
   return (
-    <section className="relative overflow-hidden bg-bone-2 py-32 md:py-44">
+    <section id="system" className="relative overflow-hidden bg-bone-2 py-32 md:py-44">
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

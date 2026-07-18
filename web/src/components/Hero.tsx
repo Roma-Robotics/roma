@@ -53,7 +53,7 @@ export function Hero() {
               animate="show"
               variants={fadeUp}
               custom={1}
-              className="display text-[14vw] leading-[0.86] text-bone md:text-[10.5rem]"
+              className="display text-[11vw] leading-[0.9] text-bone md:text-[8rem]"
             >
               Building
               <br />
