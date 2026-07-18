@@ -2,7 +2,7 @@
    (same trade-off as Simulator.tsx). */
 /* eslint-disable react-hooks/refs, react-hooks/immutability */
 import { Suspense, useEffect, useRef } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Stars, ShootingStar } from "./Mars";
 
@@ -112,6 +112,22 @@ function EarthGlobe() {
   );
 }
 
+// On phones the canvas is narrow, so pull the globe toward center-left
+// to keep it prominently in frame; on desktop it sits off to the right.
+function EarthRig() {
+  const width = useThree((s) => s.size.width);
+  const isPhone = width < 768;
+
+  return (
+    <group
+      position={isPhone ? [0.75, -0.5, 0] : [2.45, -0.35, 0]}
+      scale={isPhone ? 0.85 : 1}
+    >
+      <EarthGlobe />
+    </group>
+  );
+}
+
 export function EarthScene() {
   return (
     <div className="absolute inset-x-0 top-0 h-screen">
@@ -127,9 +143,7 @@ export function EarthScene() {
         }}
       >
         <Suspense fallback={null}>
-          <group position={[2.45, -0.35, 0]}>
-            <EarthGlobe />
-          </group>
+          <EarthRig />
         </Suspense>
         <Stars />
         <ShootingStar initialDelay={2} />
